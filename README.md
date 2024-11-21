@@ -5,6 +5,8 @@ Buscamos automatizar o cuidado com plantas para facilitar a terapia de pessoas c
 1. Frequência Alta
 2. Diária
 3. De dois em dois dias
+
+
 Assim, permitimos que os usuários definam padrões personalizados. Isso ajuda os pacientes a interagirem com as plantas, sem ter a necessidade de regá-las manualmente.
 
 Este projeto representa um passo importante na aplicação de tecnologias simples e acessíveis para melhorar
