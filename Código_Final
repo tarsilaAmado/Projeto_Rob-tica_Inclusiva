@@ -1,141 +1,130 @@
-# include < LiquidCrystal .h >
-2
-3 # define umidadeAnalog A0
-4 # define pushbuttonOptions 7
-5 # define pushbuttonDone 8
-6 # define relePin 9
-7
-8 LiquidCrystal lcd (2 , 3 , 4 , 5 , 11 , 12);
-9
-10 int humidityValue ;
-11 int nivelDeIrrigacao = 1;
-12 bool configurandoNivel = false ;
-13 unsigned long ultimoTempoDeIrrigacao = 0;
-14 unsigned long intervaloDeIrrigacao = 0;
-15
-16 // Definir os intervalos em milissegundos
-17 # define INTERVALO_DIARIO 86400000
-18 # define INTERVALO_2DIAS 172800000
-19
-20 void MenuLCD (){
-21 lcd . clear ();
-22 lcd . setCursor (0 , 0);
-23 lcd . print ( " Humidade : " );
-24 lcd . print ( humidityValue );
-4
-25 lcd . setCursor (0 , 1);
-26
-27 if ( nivelDeIrrigacao == 1){
-28 lcd . print ( " Frequencia : ALTA " );
-29 } else
-30 if ( nivelDeIrrigacao == 2){
-31 lcd . print ( " Frequencia : DIARIA " );
-32 } else
-33 if ( nivelDeIrrigacao == 3){
-34 lcd . print ( " Frequencia :2 DIAS " );
-35 }
-36 }
-37 void ConfigurandoMenu (){
-38 lcd . clear ();
-39 lcd . setCursor (0 , 0);
-40 lcd . print ( " Usar Frequencia : " );
-41 lcd . setCursor (0 , 1);
-42
-43 if ( nivelDeIrrigacao == 1){
-44 lcd . print ( " ---> ALTA " );
-45 } else
-46 if ( nivelDeIrrigacao == 2){
-47 lcd . print ( " ---> DIARIA " );
-48 } else
-49 if ( nivelDeIrrigacao == 3){
-50 lcd . print ( " - - - >2 DIAS " );
-51 }
-52 }
-53 void abrirValvula (){
-54 digitalWrite ( relePin , HIGH );
-55 }
-56 void fecharValvula (){
-57 digitalWrite ( relePin , LOW );
-58 }
-59
-60 void abrirBombaRapido () {
-61 digitalWrite ( relePin , LOW );
-62 unsigned long tempoBomba = millis ();
-63 while ( millis () - tempoBomba < 5000) {
-64
-65 int buttonStateOptions = digitalRead ( pushbuttonOptions );
-66 int buttonStateDone = digitalRead ( pushbuttonDone );
-67
-68 if ( buttonStateOptions == LOW || buttonStateDone == LOW ) {
-69
-70 configurandoNivel = true ;
-71 fecharValvula ();
-72 return ;
-73 }
-74 delay (100);
-75 }
-76 digitalWrite ( relePin , HIGH );
-77 delay (1000);
-78 }
-79
-80 void loop () {
-81 humidityValue = analogRead ( umidadeAnalog );
-82 humidityValue = map ( humidityValue , 1023 , 315 , 0 , 100);
-83
-84 // Leitura e alternancia do estado dos botoes
-85 int buttonStateOptions = digitalRead ( pushbuttonOptions );
-5
-86 static int lastButtonStateOptions = HIGH ;
-87 if ( buttonStateOptions == LOW && lastButtonStateOptions == HIGH ) {
-88 configurandoNivel = ! configurandoNivel ;
-89 delay (200);
-90 }
-91 lastButtonStateOptions = buttonStateOptions ;
-92
-93 // Modo configuracao
-94 if ( configurandoNivel ) {
-95 ConfigurandoMenu ();
-96
-97 int buttonStateDone = digitalRead ( pushbuttonDone );
-98 static int lastButtonStateDone = HIGH ;
-99 if ( buttonStateDone == LOW && lastButtonStateDone == HIGH ) {
-100 nivelDeIrrigacao ++;
-101 if ( nivelDeIrrigacao > 3) {
-102 nivelDeIrrigacao = 1;
-103 }
-104 delay (200); // Debounce
-105 }
-106 lastButtonStateDone = buttonStateDone ;
-107
-108 } else {
-109 // Exibe menu LCD no modo padrao
-110 MenuLCD ();
-111
-112 unsigned long tempoAtual = millis ();
-113
-114 // Logica de irrigacao = == === === == === === == === === == === === == === =
-115 // Modo ALTA
-116 if ( nivelDeIrrigacao == 1) {
-117 if ( humidityValue < 40) {
-118 abrirBombaRapido ();
-119 }
-120 // Modo DIARIA
-121 } else if ( nivelDeIrrigacao == 2) {
-122 intervaloDeIrrigacao = INTERVALO_DIARIO ;
-123 if (( tempoAtual - ultimoTempoDeIrrigacao >= intervaloDeIrrigacao )
-124 && humidityValue < 40) {
-125 abrirBombaRapido ();
-126 ultimoTempoDeIrrigacao = tempoAtual ;
-127 }
-128 } else if ( nivelDeIrrigacao == 3) { // Modo CADA 2 DIAS
-129 intervaloDeIrrigacao = INTERVALO_2DIAS ;
-130 if (( tempoAtual - ultimoTempoDeIrrigacao >= intervaloDeIrrigacao )
-131 && humidityValue < 40) {
-132 abrirBombaRapido ();
-133 ultimoTempoDeIrrigacao = tempoAtual ;
-134 }
-135 }
-136 }
-137
-138 delay (100);
+#include <LiquidCrystal.h>
+
+#define umidadeAnalog A0
+#define pushbuttonOptions 7
+#define pushbuttonDone 8
+#define relePin 9
+
+LiquidCrystal lcd(2, 3, 4, 5, 11, 12);
+
+int humidityValue;
+int nivelDeIrrigacao = 1;
+bool configurandoNivel = false;
+unsigned long ultimoTempoDeIrrigacao = 0;
+unsigned long intervaloDeIrrigacao = 0;
+
+// Definir os intervalos em milissegundos
+#define INTERVALO_DIARIO 86400000
+#define INTERVALO_2DIAS 172800000
+
+void MenuLCD() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Humidade: ");
+    lcd.print(humidityValue);
+
+    lcd.setCursor(0, 1);
+    if (nivelDeIrrigacao == 1) {
+        lcd.print("Frequencia: ALTA");
+    } else if (nivelDeIrrigacao == 2) {
+        lcd.print("Frequencia: DIARIA");
+    } else if (nivelDeIrrigacao == 3) {
+        lcd.print("Frequencia: 2 DIAS");
+    }
+}
+
+void ConfigurandoMenu() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Usar Frequencia: ");
+    lcd.setCursor(0, 1);
+    if (nivelDeIrrigacao == 1) {
+        lcd.print("---> ALTA");
+    } else if (nivelDeIrrigacao == 2) {
+        lcd.print("---> DIARIA");
+    } else if (nivelDeIrrigacao == 3) {
+        lcd.print("---> 2 DIAS");
+    }
+}
+
+void abrirValvula() {
+    digitalWrite(relePin, HIGH);
+}
+
+void fecharValvula() {
+    digitalWrite(relePin, LOW);
+}
+
+void abrirBombaRapido() {
+    digitalWrite(relePin, LOW);
+    unsigned long tempoBomba = millis();
+    while (millis() - tempoBomba < 5000) {
+        int buttonStateOptions = digitalRead(pushbuttonOptions);
+        int buttonStateDone = digitalRead(pushbuttonDone);
+
+        if (buttonStateOptions == LOW || buttonStateDone == LOW) {
+            configurandoNivel = true;
+            fecharValvula();
+            return;
+        }
+        delay(100);
+    }
+    digitalWrite(relePin, HIGH);
+    delay(1000);
+}
+
+void loop() {
+    humidityValue = analogRead(umidadeAnalog);
+    humidityValue = map(humidityValue, 1023, 315, 0, 100);
+
+    // Leitura e alternancia do estado dos botoes
+    int buttonStateOptions = digitalRead(pushbuttonOptions);
+    static int lastButtonStateOptions = HIGH;
+    if (buttonStateOptions == LOW && lastButtonStateOptions == HIGH) {
+        configurandoNivel = !configurandoNivel;
+        delay(200);
+    }
+    lastButtonStateOptions = buttonStateOptions;
+
+    // Modo configuracao
+    if (configurandoNivel) {
+        ConfigurandoMenu();
+
+        int buttonStateDone = digitalRead(pushbuttonDone);
+        static int lastButtonStateDone = HIGH;
+        if (buttonStateDone == LOW && lastButtonStateDone == HIGH) {
+            nivelDeIrrigacao++;
+            if (nivelDeIrrigacao > 3) {
+                nivelDeIrrigacao = 1;
+            }
+            delay(200); // Debounce
+        }
+        lastButtonStateDone = buttonStateDone;
+
+    } else {
+        // Exibe menu LCD no modo padrao
+        MenuLCD();
+
+        unsigned long tempoAtual = millis();
+
+        // Logica de irrigacao
+        if (nivelDeIrrigacao == 1) { // Modo ALTA
+            if (humidityValue < 40) {
+                abrirBombaRapido();
+            }
+        } else if (nivelDeIrrigacao == 2) { // Modo DIARIA
+            intervaloDeIrrigacao = INTERVALO_DIARIO;
+            if ((tempoAtual - ultimoTempoDeIrrigacao >= intervaloDeIrrigacao) && humidityValue < 40) {
+                abrirBombaRapido();
+                ultimoTempoDeIrrigacao = tempoAtual;
+            }
+        } else if (nivelDeIrrigacao == 3) { // Modo CADA 2 DIAS
+            intervaloDeIrrigacao = INTERVALO_2DIAS;
+            if ((tempoAtual - ultimoTempoDeIrrigacao >= intervaloDeIrrigacao) && humidityValue < 40) {
+                abrirBombaRapido();
+                ultimoTempoDeIrrigacao = tempoAtual;
+            }
+        }
+    }
+    delay(100);
 }
